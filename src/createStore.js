@@ -1,6 +1,6 @@
 //从node_modules中引入
 import isPlainObject from 'lodash/isPlainObject'
-//dispatch初始化的接口
+//dispatch初始化的变量
 export var ActionTypes = {
 		INIT: '@@redux/INIT'
 	}
@@ -17,7 +17,6 @@ export default function createStore(reducer, initialState, enhancer) {
 			//enhancer必须为函数
 			throw new Error('Expected the enhancer to be a function.')
 		}
-
 		return enhancer(createStore)(reducer, initialState)
 	}
 	//reducer必须为函数
@@ -92,7 +91,6 @@ export default function createStore(reducer, initialState, enhancer) {
 		}
 		//将当前状态和action作为参数传值给reducer,生成下个状态
 		try {
-
 			isDispatching = true
 				//调用reducer函数更新当前状态
 			currentState = currentReducer(currentState, action)
@@ -107,5 +105,30 @@ export default function createStore(reducer, initialState, enhancer) {
 			listeners[i]()
 		}
 		return action
+	}
+	/**
+	 * 替换原先reducer的接口
+	 * 重新初始化reducers和store
+	 */
+	function replaceReducer(nextReducer) {
+		if (typeof nextReducer !== 'function') {
+			throw new Error('Expected the nextReducer to be a function.')
+		}
+
+		currentReducer = nextReducer
+			//dispatch一个初始化变量代表初始化
+		dispatch({
+			type: ActionTypes.INIT
+		})
+	}
+	//初始化
+	dispatch({
+		type: ActionTypes.INIT
+	})
+	return {
+		dispatch,
+		subscribe,
+		getState,
+		replaceReducer //重新初始化reducers和store,重置store的接口
 	}
 }
