@@ -1,10 +1,16 @@
-import { ActionTypes } from './createStore'
+import {
+    ActionTypes
+} from './createStore'
 import isPlainObject from 'lodash/isPlainObject'
 /**
  * 异常处理部分
  */
 import warning from './utils/warning'
-import {getUndefinedStateErrorMessage,getUnexpectedStateShapeWarningMessage,assertReducerSanity} from './utils/exception.js';
+import {
+    getUndefinedStateErrorMessage,
+    getUnexpectedStateShapeWarningMessage,
+    assertReducerSanity
+} from './utils/exception.js';
 
 /**
  * 把reducer函数对象整合为单一reducer函数，它会遍历所有的子reducer成员，并把结果整合进单一状态树
@@ -18,9 +24,10 @@ import {getUndefinedStateErrorMessage,getUnexpectedStateShapeWarningMessage,asse
 export default function combineReducers(reducers) {
     var reducerKeys = Object.keys(reducers)
     var finalReducers = {}
-    //提取reducers中value值为function的部分
+        //先提取reducers对象中的key
     for (var i = 0; i < reducerKeys.length; i++) {
         var key = reducerKeys[i]
+            //从reducers对象的value中提取function
         if (typeof reducers[key] === 'function') {
             finalReducers[key] = reducers[key]
         }
@@ -34,9 +41,10 @@ export default function combineReducers(reducers) {
         sanityError = e
     }
     /**
-     * 典型的函数式API，始终保持闭包访问
+     * 函数式API，保持闭包访问
      */
-    return function combination(state = {}, action={}) {
+    return function combination(state = {}, action = {}) {
+        //错误处理
         if (sanityError) {
             throw sanityError
         }
@@ -50,23 +58,25 @@ export default function combineReducers(reducers) {
 
         var hasChanged = false
         var nextState = {}
-        /**
-         * 遍历访问finalReducers
-         */
+            /**
+             * 遍历访问finalReducers
+             */
         for (var i = 0; i < finalReducerKeys.length; i++) {
             var key = finalReducerKeys[i]
             var reducer = finalReducers[key]
-            /**
-             *将state按照reducer的名字分离
-             * 每个key都对应着state
-             */
+                /**
+                 *将state按照reducer的名字分离
+                 * 每个key都对应着state
+                 */
             var previousStateForKey = state[key];
+            //reducer函数
             var nextStateForKey = reducer(previousStateForKey, action)
             if (typeof nextStateForKey === 'undefined') {
                 var errorMessage = getUndefinedStateErrorMessage(key, action)
                 throw new Error(errorMessage)
             }
             nextState[key] = nextStateForKey
+                //如果nextStateForKey !== previousStateForKey，hasChanged为true
             hasChanged = hasChanged || nextStateForKey !== previousStateForKey
         }
         return hasChanged ? nextState : state
